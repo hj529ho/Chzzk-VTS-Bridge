@@ -3,8 +3,9 @@ import path from "node:path";
 import { configSchema, type Config } from "./schema.js";
 import { logger } from "../utils/logger.js";
 import { eventBus } from "../utils/event-bus.js";
+import { APP_DIR } from "../utils/paths.js";
 
-const CONFIG_PATH = path.resolve("config.json");
+const CONFIG_PATH = path.join(APP_DIR, "config.json");
 
 let currentConfig: Config | null = null;
 

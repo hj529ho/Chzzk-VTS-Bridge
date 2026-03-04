@@ -6,7 +6,13 @@
   "scripts": {
     "dev": "chcp 65001 >nul && tsx watch src/index.ts",
     "build": "tsc",
-    "start": "chcp 65001 >nul && node dist/index.js"
+    "start": "chcp 65001 >nul && node dist/index.js",
+    "build:exe": "node scripts/build-exe.mjs"
+  },
+  "pkg": {
+    "assets": ["dist/static/**/*"],
+    "targets": ["node20-win-x64"],
+    "outputPath": "release"
   },
   "keywords": [],
   "author": "",
@@ -24,6 +30,8 @@
   "devDependencies": {
     "@types/node": "^25.3.3",
     "@types/ws": "^8.18.1",
+    "@yao-pkg/pkg": "^6.14.1",
+    "esbuild": "^0.27.3",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   }

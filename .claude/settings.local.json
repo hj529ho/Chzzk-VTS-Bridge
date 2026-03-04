@@ -14,7 +14,12 @@
       "Bash(curl:*)",
       "Bash(npx kill-port:*)",
       "Bash(node:*)",
-      "Bash(git:*)"
+      "Bash(git:*)",
+      "Bash(npm ls:*)",
+      "Bash(npm run:*)",
+      "Bash(gh release:*)",
+      "Bash(where gh:*)",
+      "Bash(npx:*)"
     ]
   }
 }

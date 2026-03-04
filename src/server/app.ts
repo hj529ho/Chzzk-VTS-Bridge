@@ -9,7 +9,10 @@ import { websocketRoutes } from "./routes/websocket.js";
 import { logger } from "../utils/logger.js";
 import { getConfig } from "../config/loader.js";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+// pkg exe: __dirname = snapshot 내부, 개발: ESM __dirname
+const __dirname = typeof __filename !== "undefined"
+  ? path.dirname(__filename)
+  : path.dirname(fileURLToPath(import.meta.url));
 
 export async function startServer(): Promise<void> {
   const config = getConfig();

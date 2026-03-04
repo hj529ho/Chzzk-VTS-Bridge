@@ -5,8 +5,9 @@ import { ApiClient } from "vtubestudio";
 import { logger } from "../utils/logger.js";
 import { eventBus } from "../utils/event-bus.js";
 import { getConfig } from "../config/loader.js";
+import { APP_DIR } from "../utils/paths.js";
 
-const TOKEN_PATH = path.resolve(".vts-token");
+const TOKEN_PATH = path.join(APP_DIR, ".vts-token");
 
 let apiClient: ApiClient | null = null;
 

@@ -1,9 +1,10 @@
 import fs from "node:fs";
 import path from "node:path";
 import { logger } from "../utils/logger.js";
+import { APP_DIR } from "../utils/paths.js";
 
-const TOKENS_PATH = path.resolve(".tokens.json");
-const SETTINGS_PATH = path.resolve("settings.json");
+const TOKENS_PATH = path.join(APP_DIR, ".tokens.json");
+const SETTINGS_PATH = path.join(APP_DIR, "settings.json");
 const AUTH_BASE = "https://openapi.chzzk.naver.com";
 
 export interface Settings {
