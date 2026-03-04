@@ -1,0 +1,45 @@
+{
+  "vts": {
+    "host": "localhost",
+    "port": 8001,
+    "pluginName": "Chzzk Donation Bridge",
+    "pluginDeveloper": "User"
+  },
+  "server": {
+    "port": 3000
+  },
+  "rules": [
+    {
+      "id": "rule-1",
+      "name": "소액 후원 리액션",
+      "enabled": true,
+      "conditions": {
+        "minAmount": 1000,
+        "maxAmount": 4999
+      },
+      "actions": [
+        {
+          "type": "hotkey",
+          "hotkeyId": "YourHotkeyId"
+        }
+      ],
+      "cooldown": 5000
+    },
+    {
+      "id": "rule-2",
+      "name": "대액 후원 축하",
+      "enabled": true,
+      "conditions": {
+        "minAmount": 10000
+      },
+      "actions": [
+        {
+          "type": "expression",
+          "expressionFile": "celebration.exp3.json",
+          "duration": 5000
+        }
+      ],
+      "cooldown": 10000
+    }
+  ]
+}

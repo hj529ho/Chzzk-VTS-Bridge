@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>치지직 후원 연동</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ===== 초기 설정 위자드 ===== -->
+  <div id="wizard" class="hidden">
+    <div class="wizard-container">
+      <div class="wizard-header">
+        <h1>치지직 후원 연동 설정</h1>
+        <p class="wizard-subtitle">처음 사용하시나요? 아래 단계를 따라 설정해주세요!</p>
+        <div class="wizard-steps">
+          <span class="step-dot active" data-step="1">1</span>
+          <span class="step-line"></span>
+          <span class="step-dot" data-step="2">2</span>
+          <span class="step-line"></span>
+          <span class="step-dot" data-step="3">3</span>
+        </div>
+      </div>
+
+      <!-- Step 1: 치지직 설정 -->
+      <div class="wizard-step" id="wizard-step-1">
+        <h2>치지직 개발자 등록</h2>
+        <div class="guide-box">
+          <p><strong>이렇게 하세요:</strong></p>
+          <ol>
+            <li><a href="https://developers.chzzk.naver.com" target="_blank">치지직 개발자센터</a>에 접속해서 로그인하세요</li>
+            <li>"새 애플리케이션 등록"을 눌러주세요</li>
+            <li>앱 이름은 아무거나 (예: "내 후원 연동")</li>
+            <li>로그인 리다이렉트 URL에 <code id="redirect-url">http://localhost:3000/auth/callback</code> 을 입력하세요</li>
+            <li>등록하면 나오는 <strong>Client ID</strong>와 <strong>Client Secret</strong>을 아래에 붙여넣기 하세요</li>
+          </ol>
+        </div>
+
+        <div class="form-group">
+          <label for="inp-client-id">Client ID</label>
+          <input id="inp-client-id" type="text" placeholder="발급받은 Client ID를 붙여넣기">
+        </div>
+        <div class="form-group">
+          <label for="inp-client-secret">Client Secret</label>
+          <input id="inp-client-secret" type="password" placeholder="발급받은 Client Secret을 붙여넣기">
+        </div>
+        <div class="form-group">
+          <label for="inp-channel-id">내 채널 ID</label>
+          <input id="inp-channel-id" type="text" placeholder="치지직 채널 URL에서 확인 (예: ab1c2d3e...)">
+          <span class="hint">치지직 내 채널 페이지 URL의 마지막 부분이에요</span>
+        </div>
+
+        <div class="wizard-nav">
+          <div></div>
+          <button class="btn-main" id="btn-save-settings">저장하고 다음으로</button>
+        </div>
+      </div>
+
+      <!-- Step 2: 치지직 로그인 -->
+      <div class="wizard-step hidden" id="wizard-step-2">
+        <h2>치지직 계정 연결</h2>
+        <div class="guide-box">
+          <p>치지직 계정으로 로그인해서 후원 알림을 받을 수 있게 해주세요.</p>
+        </div>
+
+        <div class="center-action">
+          <button class="btn-main btn-large" id="btn-chzzk-login">치지직 계정 연결하기</button>
+          <p class="hint" id="chzzk-login-hint">버튼을 누르면 치지직 로그인 페이지가 열려요</p>
+        </div>
+
+        <div class="wizard-nav">
+          <button class="btn-sub" onclick="wizardGoTo(1)">이전</button>
+          <button class="btn-main" id="btn-step2-next">다음으로</button>
+        </div>
+      </div>
+
+      <!-- Step 3: VTuber Studio -->
+      <div class="wizard-step hidden" id="wizard-step-3">
+        <h2>VTuber Studio 연결</h2>
+        <div class="guide-box">
+          <p><strong>VTuber Studio에서 이렇게 하세요:</strong></p>
+          <ol>
+            <li>VTuber Studio를 실행하세요</li>
+            <li>왼쪽 메뉴에서 톱니바퀴(설정)를 눌러주세요</li>
+            <li>"API (Plugin) 사용"을 <strong>켜기</strong>로 바꿔주세요</li>
+            <li>잠시 기다리면 "Chzzk Donation Bridge" 플러그인 승인 팝업이 떠요</li>
+            <li><strong>허용</strong>을 눌러주세요</li>
+          </ol>
+        </div>
+
+        <div class="status-check" id="vts-wizard-status">
+          <span class="status-icon">...</span>
+          <span class="status-text">VTuber Studio 연결 확인 중...</span>
+        </div>
+
+        <div class="wizard-nav">
+          <button class="btn-sub" onclick="wizardGoTo(2)">이전</button>
+          <button class="btn-main" id="btn-finish-wizard">설정 완료! 시작하기</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 메인 대시보드 ===== -->
+  <div id="dashboard" class="hidden">
+    <header>
+      <h1>치지직 후원 연동</h1>
+      <button class="btn-icon" id="btn-open-settings" title="설정">설정</button>
+    </header>
+
+    <!-- 연결 상태 -->
+    <div class="status-cards">
+      <div class="status-card" id="card-vts">
+        <div class="status-card-icon" id="icon-vts">VTS</div>
+        <div class="status-card-info">
+          <div class="status-card-title">VTuber Studio</div>
+          <div class="status-card-state" id="state-vts">연결 확인 중...</div>
+        </div>
+      </div>
+      <div class="status-card" id="card-chzzk">
+        <div class="status-card-icon" id="icon-chzzk">CZ</div>
+        <div class="status-card-info">
+          <div class="status-card-title">치지직</div>
+          <div class="status-card-state" id="state-chzzk">연결 확인 중...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 규칙 목록 -->
+    <section class="section-card">
+      <div class="section-header">
+        <h2>반응 규칙</h2>
+        <button class="btn-main" id="btn-add-rule">+ 새 규칙 만들기</button>
+      </div>
+      <p class="section-desc">후원이나 채팅이 들어오면 어떤 반응을 보여줄지 설정하세요</p>
+      <div id="rules-list">
+        <div class="empty-state">아직 규칙이 없어요. 위 버튼을 눌러 첫 규칙을 만들어보세요!</div>
+      </div>
+    </section>
+
+    <!-- 테스트 -->
+    <section class="section-card">
+      <div class="section-header">
+        <h2>테스트 보내기</h2>
+      </div>
+      <p class="section-desc">실제 돈을 쓰지 않고 가짜 후원/채팅으로 규칙이 잘 작동하는지 테스트해보세요</p>
+
+      <div class="test-tabs">
+        <button class="test-tab active" data-tab="donation">후원 테스트</button>
+        <button class="test-tab" data-tab="chat">채팅 테스트</button>
+      </div>
+
+      <div class="test-donation-form" id="test-donation-panel">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="test-nick">보내는 사람</label>
+            <input id="test-nick" value="테스트 유저" placeholder="닉네임">
+          </div>
+          <div class="form-group">
+            <label for="test-amount">금액 (원)</label>
+            <input id="test-amount" type="number" value="1000" min="0">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="test-text">메시지</label>
+          <input id="test-text" value="테스트 후원이에요!" placeholder="후원 메시지">
+        </div>
+        <button class="btn-main" id="btn-test-donation">테스트 후원 보내기</button>
+      </div>
+
+      <div class="test-donation-form hidden" id="test-chat-panel">
+        <div class="form-group">
+          <label for="test-chat-nick">보내는 사람</label>
+          <input id="test-chat-nick" value="테스트 유저" placeholder="닉네임">
+        </div>
+        <div class="form-group">
+          <label for="test-chat-text">채팅 내용</label>
+          <input id="test-chat-text" value="안녕하세요!" placeholder="채팅 메시지">
+        </div>
+        <button class="btn-main" id="btn-test-chat">테스트 채팅 보내기</button>
+      </div>
+    </section>
+
+    <!-- 활동 로그 -->
+    <section class="section-card">
+      <div class="section-header">
+        <h2>활동 기록</h2>
+      </div>
+      <div id="log-feed">
+        <div class="empty-state">아직 활동 기록이 없어요. 후원이 들어오면 여기에 표시돼요!</div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ===== 규칙 편집 모달 ===== -->
+  <div id="modal-overlay" class="hidden">
+    <div id="modal">
+      <div class="modal-header">
+        <h3 id="modal-title">새 규칙 만들기</h3>
+        <button class="btn-close" id="btn-modal-close">&times;</button>
+      </div>
+
+      <form id="rule-form">
+        <div class="form-group">
+          <label for="rf-name">규칙 이름</label>
+          <input id="rf-name" name="name" required placeholder="예: 소액 후원 인사">
+        </div>
+
+        <input type="hidden" name="id">
+
+        <div class="form-section">
+          <h4>언제 반응할까요?</h4>
+
+          <div class="form-group">
+            <label for="rf-event-type">트리거 유형</label>
+            <select id="rf-event-type" name="eventType">
+              <option value="donation">후원이 들어오면</option>
+              <option value="chat">채팅이 올라오면</option>
+              <option value="*">후원 + 채팅 모두</option>
+            </select>
+          </div>
+
+          <div id="donation-conditions">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="rf-min">최소 금액 (원)</label>
+                <input id="rf-min" name="minAmount" type="number" min="0" placeholder="예: 1000">
+              </div>
+              <div class="form-group">
+                <label for="rf-max">최대 금액 (원)</label>
+                <input id="rf-max" name="maxAmount" type="number" min="0" placeholder="비우면 제한 없음">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="rf-dtype">후원 종류</label>
+              <select id="rf-dtype" name="donationType">
+                <option value="*">전부 다</option>
+                <option value="CHAT">채팅 후원 (치즈)</option>
+                <option value="VIDEO">영상 후원</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="chat-conditions" class="hidden">
+            <div class="form-group">
+              <label for="rf-nickname">특정 닉네임만 (선택사항)</label>
+              <input id="rf-nickname" name="nicknamePattern" placeholder="예: 팬1,팬2 (쉼표로 구분)">
+              <span class="hint">비워두면 모든 사람의 채팅에 반응해요</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="rf-text">특정 단어가 포함되면 (선택사항)</label>
+            <input id="rf-text" name="textPattern" placeholder="예: 사랑,좋아 (쉼표로 구분)">
+            <span class="hint">비워두면 모든 메시지에 반응해요</span>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h4>어떻게 반응할까요?</h4>
+          <div id="actions-container"></div>
+          <button type="button" class="btn-sub" id="btn-add-action">+ 반응 추가</button>
+        </div>
+
+        <div class="form-group">
+          <label for="rf-cooldown">같은 반응 대기 시간 (초)</label>
+          <input id="rf-cooldown" name="cooldown" type="number" min="0" value="5" placeholder="5">
+          <span class="hint">이 규칙이 연속으로 실행되지 않게 쉬는 시간이에요</span>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-sub" id="btn-cancel">취소</button>
+          <button type="submit" class="btn-main">저장하기</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== 설정 모달 ===== -->
+  <div id="settings-overlay" class="hidden">
+    <div id="settings-modal">
+      <div class="modal-header">
+        <h3>설정</h3>
+        <button class="btn-close" id="btn-settings-close">&times;</button>
+      </div>
+
+      <div class="form-group">
+        <label>치지직 Client ID</label>
+        <input id="set-client-id" type="text">
+      </div>
+      <div class="form-group">
+        <label>치지직 Client Secret</label>
+        <input id="set-client-secret" type="password">
+      </div>
+      <div class="form-group">
+        <label>치지직 채널 ID</label>
+        <input id="set-channel-id" type="text">
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-sub" id="btn-settings-cancel">닫기</button>
+        <button class="btn-main" id="btn-settings-save">저장</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

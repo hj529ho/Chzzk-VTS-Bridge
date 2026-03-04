@@ -1,0 +1,30 @@
+{
+  "name": "chzzk-vts-bridge",
+  "version": "1.0.0",
+  "description": "Chzzk donation to VTuber Studio bridge",
+  "type": "module",
+  "scripts": {
+    "dev": "chcp 65001 >nul && tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "chcp 65001 >nul && node dist/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@fastify/static": "^9.0.0",
+    "@fastify/websocket": "^11.2.0",
+    "fastify": "^5.7.4",
+    "pino": "^10.3.1",
+    "socket.io-client": "^2.0.3",
+    "vtubestudio": "^3.11.0",
+    "ws": "^8.19.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^25.3.3",
+    "@types/ws": "^8.18.1",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  }
+}
