@@ -30,7 +30,20 @@
 
 ## 설치
 
-### 1. 저장소 클론 및 의존성 설치
+### 방법 1: exe 파일로 바로 실행 (추천)
+
+Node.js 설치가 필요 없습니다.
+
+1. [Releases](https://github.com/hj529ho/Chzzk-VTS-Bridge/releases) 페이지에서 최신 zip 파일 다운로드
+2. 원하는 폴더에 압축 해제
+3. `chzzk-vts-bridge.exe` 실행
+4. 브라우저에서 `http://localhost:3000` 접속
+
+> 설정 파일(`config.json`, `settings.json` 등)은 exe와 같은 폴더에 자동 생성됩니다.
+
+### 방법 2: 소스코드에서 실행 (개발자용)
+
+#### 1. 저장소 클론 및 의존성 설치
 
 ```bash
 git clone <repository-url>
@@ -38,7 +51,7 @@ cd chzzk-vts-bridge
 npm install
 ```
 
-### 2. 서버 실행
+#### 2. 서버 실행
 
 ```bash
 npm run dev
