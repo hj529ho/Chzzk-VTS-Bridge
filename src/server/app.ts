@@ -9,19 +9,23 @@ import { websocketRoutes } from "./routes/websocket.js";
 import { logger } from "../utils/logger.js";
 import { getConfig } from "../config/loader.js";
 
-// pkg exe: __dirname = snapshot 내부, 개발: ESM __dirname
-const __dirname = typeof __filename !== "undefined"
-  ? path.dirname(__filename)
-  : path.dirname(fileURLToPath(import.meta.url));
+import { APP_DIR } from "../utils/paths.js";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export async function startServer(): Promise<void> {
   const config = getConfig();
+
+  // pkg exe: exe 옆 static/, 개발: src/server/static/
+  const staticRoot = (process as any).pkg
+    ? path.join(APP_DIR, "static")
+    : path.join(__dirname, "static");
 
   const app = Fastify({ logger: false });
 
   await app.register(fastifyWebsocket);
   await app.register(fastifyStatic, {
-    root: path.join(__dirname, "static"),
+    root: staticRoot,
     prefix: "/",
   });
 
