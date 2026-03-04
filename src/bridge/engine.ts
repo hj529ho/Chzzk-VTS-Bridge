@@ -34,7 +34,7 @@ export function startBridgeEngine(): void {
         trigger: donation,
       });
 
-      executeRule(rule).catch((e) => {
+      executeRule(rule, { donationAmount: donation.payAmount }).catch((e) => {
         logger.error({ err: e, ruleId: rule.id }, "Rule execution failed");
       });
     }

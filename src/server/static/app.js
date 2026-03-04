@@ -64,7 +64,7 @@ function handleWs(msg) {
       addLog('rule', `[${msg.data.ruleName}] 규칙이 반응했어요`);
       break;
     case 'bridge:action-triggered':
-      const labels = { hotkey: '핫키 실행', expression: '표정 변경', item: '아이템', tint: '색상 변경' };
+      const labels = { hotkey: '핫키 실행', expression: '표정 변경', item: '아이템', throw: '아이템 던지기', tint: '색상 변경' };
       addLog('action', `${labels[msg.data.actionType] || msg.data.actionType}: ${msg.data.detail}`);
       break;
   }
@@ -241,7 +241,7 @@ function renderRules() {
     if (rule.conditions.nicknamePattern) parts.push(`닉네임: "${rule.conditions.nicknamePattern}"`);
     if (rule.conditions.textPattern) parts.push(`"${rule.conditions.textPattern}" 포함`);
 
-    const actionLabels = { hotkey: '핫키', expression: '표정', item: '아이템', tint: '색상' };
+    const actionLabels = { hotkey: '핫키', expression: '표정', item: '아이템', throw: '던지기', tint: '색상' };
     const actionSummary = rule.actions.map(a => actionLabels[a.type] || a.type).join(', ');
 
     const defaultTrigger = et === 'chat' ? '모든 채팅' : '모든 후원';
@@ -365,6 +365,7 @@ function addActionBlock(action) {
         <option value="hotkey" ${type === 'hotkey' ? 'selected' : ''}>핫키 실행</option>
         <option value="expression" ${type === 'expression' ? 'selected' : ''}>표정 변경</option>
         <option value="item" ${type === 'item' ? 'selected' : ''}>아이템 표시</option>
+        <option value="throw" ${type === 'throw' ? 'selected' : ''}>아이템 던지기</option>
         <option value="tint" ${type === 'tint' ? 'selected' : ''}>얼굴 색 변경</option>
       </select>
     </div>
@@ -457,6 +458,65 @@ function renderFields(block, type, action) {
       `;
       break;
 
+    case 'throw':
+      c.innerHTML = `
+        <div class="form-group">
+          <label>던질 아이템</label>
+          <select class="af-fileName">
+            ${vtsItems.length
+              ? vtsItems.map(i => `<option value="${esc(i.fileName)}" ${action?.fileName === i.fileName ? 'selected' : ''}>${esc(i.fileName)}</option>`).join('')
+              : `<option value="">${vtsConnected ? '사용 가능한 아이템이 없어요' : 'VTuber Studio를 먼저 연결해주세요'}</option>`
+            }
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>크기</label>
+            <input class="af-size" type="number" step="0.01" min="0" value="${action?.size ?? 0.15}">
+          </div>
+          <div class="form-group">
+            <label>날아오는 속도 (초)</label>
+            <input class="af-throwSpeed" type="number" step="0.1" min="0.1" value="${action?.throwSpeed ?? 0.5}">
+            <span class="hint">작을수록 빠르게 날아와요</span>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>흔들림 강도</label>
+            <input class="af-modelShake" type="number" step="1" min="0" value="${action?.modelShake ?? 15}">
+            <span class="hint">0이면 안 흔들려요</span>
+          </div>
+          <div class="form-group">
+            <label>유지 시간 (초)</label>
+            <input class="af-duration" type="number" min="0" step="0.5" value="${action?.duration ? action.duration / 1000 : 3}">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>머리 높이 조절</label>
+          <input class="af-targetOffsetY" type="range" min="-2" max="2" step="0.05" value="${action?.targetOffsetY ?? 0.4}">
+          <span class="hint af-offsetLabel">현재: ${action?.targetOffsetY ?? 0.4} (높을수록 위로, 테스트로 맞춰보세요)</span>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>단가당 개수 (원)</label>
+            <input class="af-amountPerItem" type="number" min="0" step="100" value="${action?.amountPerItem ?? 0}">
+            <span class="hint">0이면 항상 1개. 예: 1000 → 만원 후원 시 10개 던짐</span>
+          </div>
+          <div class="form-group">
+            <label>최대 개수</label>
+            <input class="af-maxItems" type="number" min="1" step="1" value="${action?.maxItems ?? 30}">
+            <span class="hint">한 번에 던질 수 있는 최대 수량</span>
+          </div>
+        </div>
+      `;
+      // Range label live update
+      const rangeEl = c.querySelector('.af-targetOffsetY');
+      const labelEl = c.querySelector('.af-offsetLabel');
+      if (rangeEl && labelEl) {
+        rangeEl.oninput = () => { labelEl.textContent = '현재: ' + rangeEl.value + ' (높을수록 위로, 테스트로 맞춰보세요)'; };
+      }
+      break;
+
     case 'tint':
       c.innerHTML = `
         <div class="form-group">
@@ -516,6 +576,21 @@ function collectActions() {
           positionY: parseFloat(fields.querySelector('.af-positionY')?.value) || 0,
           size: parseFloat(fields.querySelector('.af-size')?.value) || 0.1,
           ...(durSec ? { duration: Math.round(durSec * 1000) } : {}),
+        });
+        break;
+      }
+      case 'throw': {
+        const durSec = parseFloat(fields.querySelector('.af-duration')?.value);
+        actions.push({
+          type, delay,
+          fileName: fields.querySelector('.af-fileName')?.value ?? '',
+          size: parseFloat(fields.querySelector('.af-size')?.value) || 0.15,
+          throwSpeed: parseFloat(fields.querySelector('.af-throwSpeed')?.value) || 0.5,
+          modelShake: parseFloat(fields.querySelector('.af-modelShake')?.value) ?? 15,
+          targetOffsetY: parseFloat(fields.querySelector('.af-targetOffsetY')?.value) ?? 0.4,
+          amountPerItem: parseFloat(fields.querySelector('.af-amountPerItem')?.value) || 0,
+          maxItems: parseInt(fields.querySelector('.af-maxItems')?.value) || 30,
+          ...(durSec ? { duration: Math.round(durSec * 1000) } : { duration: 3000 }),
         });
         break;
       }

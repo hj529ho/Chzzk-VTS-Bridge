@@ -36,11 +36,25 @@ const tintAction = z.object({
   delay: z.number().min(0).default(0),
 });
 
+const throwAction = z.object({
+  type: z.literal("throw"),
+  fileName: z.string(),
+  size: z.number().min(0).default(0.15),
+  duration: z.number().min(0).default(3000),
+  throwSpeed: z.number().min(0).default(0.5),
+  modelShake: z.number().min(0).default(15),
+  targetOffsetY: z.number().default(0.4),
+  amountPerItem: z.number().min(0).default(0),
+  maxItems: z.number().min(1).default(30),
+  delay: z.number().min(0).default(0),
+});
+
 export const actionSchema = z.discriminatedUnion("type", [
   hotkeyAction,
   expressionAction,
   itemAction,
   tintAction,
+  throwAction,
 ]);
 
 export const ruleSchema = z.object({

@@ -1,5 +1,5 @@
 import type { Action, Rule } from "../config/schema.js";
-import { triggerHotkey, activateExpression, loadItem, unloadItem, tintArtMesh, resetTint } from "../vts/actions.js";
+import { triggerHotkey, activateExpression, loadItem, unloadItem, tintArtMesh, resetTint, throwItem } from "../vts/actions.js";
 import { eventBus } from "../utils/event-bus.js";
 import { logger } from "../utils/logger.js";
 
@@ -16,7 +16,11 @@ export function isOnCooldown(ruleId: string, cooldown: number): boolean {
   return Date.now() - lastFired < cooldown;
 }
 
-async function executeAction(action: Action, ruleId: string): Promise<void> {
+export interface ActionContext {
+  donationAmount?: number;
+}
+
+async function executeAction(action: Action, ruleId: string, ctx: ActionContext = {}): Promise<void> {
   if (action.delay > 0) {
     await sleep(action.delay);
   }
@@ -63,6 +67,33 @@ async function executeAction(action: Action, ruleId: string): Promise<void> {
       }
       break;
     }
+    case "throw": {
+      let count = 1;
+      if (action.amountPerItem > 0 && ctx.donationAmount) {
+        count = Math.min(
+          Math.max(1, Math.floor(ctx.donationAmount / action.amountPerItem)),
+          action.maxItems,
+        );
+      }
+      const throwOpts = {
+        size: action.size,
+        throwSpeed: action.throwSpeed,
+        modelShake: action.modelShake,
+        duration: action.duration,
+        targetOffsetY: action.targetOffsetY,
+      };
+      // 동시에 던지되 살짝 시차 (50ms 간격)
+      const throws = Array.from({ length: count }, (_, i) =>
+        sleep(i * 50).then(() => throwItem(action.fileName, throwOpts)),
+      );
+      await Promise.all(throws);
+      eventBus.emit("bridge:action-triggered", {
+        ruleId,
+        actionType: "throw",
+        detail: `${action.fileName} x${count}`,
+      });
+      break;
+    }
     case "tint": {
       await tintArtMesh({
         colorR: action.colorR,
@@ -87,7 +118,7 @@ async function executeAction(action: Action, ruleId: string): Promise<void> {
   }
 }
 
-export async function executeRule(rule: Rule): Promise<void> {
+export async function executeRule(rule: Rule, ctx: ActionContext = {}): Promise<void> {
   if (isOnCooldown(rule.id, rule.cooldown)) {
     logger.debug({ ruleId: rule.id }, "Rule on cooldown, skipping");
     return;
@@ -97,7 +128,7 @@ export async function executeRule(rule: Rule): Promise<void> {
 
   for (const action of rule.actions) {
     try {
-      await executeAction(action, rule.id);
+      await executeAction(action, rule.id, ctx);
     } catch (e) {
       logger.error({ err: e, ruleId: rule.id, actionType: action.type }, "Action execution failed");
     }
