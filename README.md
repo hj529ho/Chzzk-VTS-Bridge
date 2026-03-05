@@ -5,9 +5,9 @@
 치지직(CHZZK) 후원/채팅에 반응하여 VTuber Studio 액션을 자동 실행하는 브릿지 앱입니다.
 웹 대시보드에서 모든 설정을 GUI로 관리할 수 있습니다.
 
-<img width="1348/3" height="1109/3" alt="image" src="https://github.com/user-attachments/assets/ae68df27-761a-49b2-8dbb-db092bd70eae" />
-<img width="1350/3" height="1109/3" alt="image" src="https://github.com/user-attachments/assets/215e7bbb-e547-4420-8518-9d83264896c6" />
-<img width="510/3" height="941/3" alt="image" src="https://github.com/user-attachments/assets/5dbd227b-6e7a-4656-857e-f08d088be51a" />
+<img width="600" alt="image" src="https://github.com/user-attachments/assets/ae68df27-761a-49b2-8dbb-db092bd70eae" />
+<img width="600" alt="image" src="https://github.com/user-attachments/assets/215e7bbb-e547-4420-8518-9d83264896c6" />
+<img width="320" alt="image" src="https://github.com/user-attachments/assets/5dbd227b-6e7a-4656-857e-f08d088be51a" />
 
 
 ---
